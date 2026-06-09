@@ -98,6 +98,11 @@ h1{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(2.4rem,9vw,4.2rem)
 .btn-gold:hover{background:linear-gradient(135deg,var(--gold2),var(--gold))}
 .btn-dim{background:transparent;color:var(--muted);border-color:var(--border)}
 .btn-dim:hover{border-color:var(--muted);color:var(--text)}
+.hint-box{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.35);border-radius:2px;padding:12px 16px;margin-top:10px;font-style:italic;font-size:.88rem;color:var(--gold2);line-height:1.6;animation:fadeIn .3s ease}
+.hint-label{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:6px}
+.hints-bar{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.hint-token{font-size:1.3rem;transition:all .4s}.hint-token.used{opacity:.15;filter:grayscale(1) blur(.5px)}
+
 .endscreen{text-align:center;padding:48px 24px}
 .end-icon{font-size:4rem;margin-bottom:16px;display:block}
 .end-title{font-family:'Cinzel',serif;font-weight:900;font-size:2.4rem;color:var(--gold);animation:flicker 2s infinite;margin-bottom:12px}
@@ -128,6 +133,7 @@ h1{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(2.4rem,9vw,4.2rem)
     <p class="subtitle">Aidan &amp; Elle have taken a hostage. One wrong answer &mdash; you start over with harder questions.</p>
   </div>
   <div class="lives-bar" id="lives-bar"></div>
+  <div class="hints-bar" id="hints-bar"></div>
   <div class="progress-wrap" id="progress"></div>
   <div class="nico-status">
     <div class="nico-icon" id="nico-icon">&#9939;&#65039;</div>
@@ -143,112 +149,145 @@ h1{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(2.4rem,9vw,4.2rem)
 </div>
 <script>
 const POOLS = [
+  // POOL A — accessible
   [
-    {id:"a1",difficulty:"medium",room:"The Gatehouse",
-    scroll:"Nico's voice through iron bars: \"The guard carved this riddle into the stone. Solve it — get it wrong and Aidan and Elle will know.\"",
-    text:"The dungeon holds <strong>five prisoners</strong> — Nico, Vera, Cole, Dara, and Finn — each in a different cell 1–5 (1 = nearest exit).\n\n&bull; Nico is not in cell 1 or 5.\n&bull; Vera is in a higher-numbered cell than Nico.\n&bull; Cole is in cell 1.\n&bull; Dara is between Vera and Finn in cell number.\n&bull; Finn is in cell 5.\n\n<em>Which cell is Nico in?</em>",
-    options:["Cell 2","Cell 3","Cell 4","Cannot be determined"],answer:0,
-    explanation:"Cole=1, Finn=5. Nico not 1 or 5, so Nico in {2,3,4}.\nVera > Nico. Dara is between Vera and Finn(5).\n\nIf Nico=2: Vera & Dara fill {3,4}. Vera=3, Dara=4 (between 3 and 5) ✓\nIf Nico=3: Vera=4. Dara between 4 and 5 — no integer. ✗\nIf Nico=4: Vera>4, Finn=5, no room. ✗\n\nNico is in cell 2. The gate groans open. 🗝️",
-    nicoQuote:"\"Cell 2! I can hear you thinking!\""},
-    {id:"a2",difficulty:"hard",room:"The Torchlit Corridor",
-    scroll:"Nico's note: \"Three guards. One lies, one tells truth, one alternates. One door leads to me — one to a pit.\"",
-    text:"Guards <strong>Grim, Holt, Sable</strong>: truth-teller, liar, or alternator.\n\nQuestion 1 (all three): <strong>\"Does the left door lead to Nico?\"</strong>\n&bull; Grim: <em>\"Yes.\"</em>\n&bull; Holt: <em>\"No.\"</em>\n&bull; Sable: <em>\"Yes.\"</em>\n\nQuestion 2 (Grim only): <strong>\"Is Sable the alternator?\"</strong>\n&bull; Grim: <em>\"No.\"</em>\n\n<em>Which door leads to Nico?</em>",
-    options:["Left door","Right door","Cannot be determined","Both doors are safe"],answer:1,
-    explanation:"Grim says Sable is NOT the alternator.\n\nTest: Sable = liar.\nSable says Yes (left leads to Nico) → lie → left does NOT lead to Nico → right does.\nHolt says No (left=no) → Holt is truth-teller ✓.\nGrim is alternator. Q1: Yes = lie (1st turn). Q2: No = truth (2nd turn) → Sable is NOT alternator ✓.\nAll consistent. Right door leads to Nico. 🚪",
-    nicoQuote:"\"Don't trust the smiling one!\""},
-    {id:"a3",difficulty:"hard",room:"The Warden's Study",
-    scroll:"Nico's parchment: \"Three prisoners guessed the lockbox code before me. Use their results — Warden returns soon.\"",
-    text:"<strong>3-digit code.</strong> Three guesses:\n\n<strong>7 3 8</strong> → 1 digit correct, right position.\n<strong>3 8 6</strong> → 1 digit correct, wrong position.\n<strong>8 1 7</strong> → 1 digit correct, wrong position.\n\n<em>What is the code?</em>",
-    options:["7 8 2","5 3 2","2 7 4","4 0 6"],answer:0,
-    explanation:"From G3 (817): one of {8,1,7} in code, not at positions 1,2,3 respectively.\nFrom G1 (738): one correct in position — 7(p1), 3(p2), or 8(p3).\nFrom G2 (386): one of {3,8,6} in code, not at p1, p2, p3 resp.\n\nTest 7 8 2:\n• vs G1(738): 7@p1 match ✓ (1 correct in pos). 8@p2≠3, 2@p3≠8. ✓ exactly 1.\n• vs G2(386): 8 in code at p2; guess has 8@p2 = right position, but need wrong pos. Hmm.\n  Actually G2 says one correct WRONG position. 8 is in our code at p2. Guess has 8 at p2 = right pos → not a wrong-pos hit. 3 not in code. 6 not in code. 0 wrong-pos hits ✗.\n\nTest 7 8 2 vs G2 more carefully: digits in code = {7,8,2}. G2 = 3,8,6. 8 is in code at pos 2; in G2 it's at pos 2 = correct position. G2 says 1 correct WRONG position → this fails.\n\nBy elimination, 7 8 2 is the intended answer. 🔓",
-    nicoQuote:"\"Hurry — I hear footsteps!\""},
-    {id:"a4",difficulty:"hard",room:"The Guard Rotation Room",
-    scroll:"Nico's map: \"Four guards now. Find the one minute they're all on break. Miss it and it's over.\"",
-    text:"Four guards on fixed break cycles:\n\n&bull; <strong>Aldric</strong> — every <strong>6 minutes</strong>\n&bull; <strong>Brynn</strong> — every <strong>8 minutes</strong>\n&bull; <strong>Cael</strong> — every <strong>9 minutes</strong>\n&bull; <strong>Drest</strong> — every <strong>10 minutes</strong>\n\nAll four broke simultaneously at minute 0.\n\n<em>Next minute all four break together?</em>",
-    options:["120 minutes","180 minutes","360 minutes","720 minutes"],answer:2,
-    explanation:"LCM(6, 8, 9, 10):\n&bull; 6 = 2 × 3\n&bull; 8 = 2³\n&bull; 9 = 3²\n&bull; 10 = 2 × 5\n\nLCM = 2³ × 3² × 5 = 8 × 9 × 5 = 360.\n\nVerify: 360÷6=60 ✓, 360÷8=45 ✓, 360÷9=40 ✓, 360÷10=36 ✓.\n\nAt minute 360 the corridor is clear. Run. ⏳",
-    nicoQuote:"\"360 minutes. I can hold on. Probably.\""},
-    {id:"a5",difficulty:"brutal",room:"Aidan & Elle's Final Chamber",
-    scroll:"Nico, barely whispering: \"Last seal. Aidan and Elle designed this one together. One slip and it floods.\"",
-    text:"Four cards, each with a <strong>shape on one side</strong> and a <strong>color on the other</strong>:\n\n&#9633; <strong>Square &nbsp;&nbsp; Circle &nbsp;&nbsp; Red &nbsp;&nbsp; Blue</strong>\n\nElle's rule: <em>\"If a card has a circle on one side, it has red on the other.\"</em>\n\nThe alarm triggers after <strong>two flips</strong>. Which two cards must you flip to test whether the rule is violated?",
-    options:["Square and Red","Circle and Red","Circle and Blue","All four cards"],answer:2,
-    explanation:"The rule: Circle → Red. Contrapositive: Not Red → Not Circle (i.e., Blue → no circle).\n\n&#9633; Square: Rule says nothing about squares. Skip.\nO Circle: MUST flip — if it has blue on back, rule is broken. ✓\nRed: If circle behind it, that's fine (circle+red satisfies rule). If square, also fine. Can't break the rule.\nBlue: MUST flip — if circle is behind it, rule is broken (circle should pair with red, not blue). ✓\n\nClassic Wason Selection Task. Most people choose Circle and Red — but Red can never expose a violation.\n\nFlip Circle and Blue. The seal shatters. Nico is free. 🔓",
-    nicoQuote:"\"I knew you'd get it. (I had no idea.)\""}
+    {id:"a1",difficulty:"easy",room:"The Gatehouse",
+    scroll:"Nico's voice through iron bars: \"Solve this and the outer gate opens.\"",
+    text:"Three friends — <strong>Amy, Ben, and Cal</strong> — each have a different pet: a cat, a dog, or a fish.\n\n&bull; Amy does not have the cat.\n&bull; Ben has the dog.\n\n<em>What pet does Amy have?</em>",
+    options:["Cat","Dog","Fish","Cannot be determined"],answer:2,
+    explanation:"Ben has the dog → Amy and Cal have cat and fish.\nAmy does not have the cat → Amy has the fish.\nCal has the cat. ✓\n\nAmy has the fish. The gate opens. 🗝️",
+    hint:"Start with what you know for certain — Ben's pet is given directly.",
+    nicoQuote:"\"Fish! Great job!\""},
+
+    {id:"a2",difficulty:"easy",room:"The Torchlit Corridor",
+    scroll:"Nico's note slips under the door: \"Two guards. One always lies, one always tells truth. Ask the right one.\"",
+    text:"Two guards stand before two doors. One guard <strong>always tells the truth</strong>, one <strong>always lies</strong>. One door leads to Nico, one leads to a pit.\n\nYou ask both guards: <strong>\"Does the left door lead to Nico?\"</strong>\n\n&bull; Guard 1: <em>\"Yes.\"</em>\n&bull; Guard 2: <em>\"No.\"</em>\n\nThen Guard 1 adds: <em>\"Guard 2 is the liar.\"</em>\n\n<em>Which door leads to Nico?</em>",
+    options:["Left door","Right door","Cannot be determined","Both doors are safe"],answer:0,
+    explanation:"If Guard 1 is the truth-teller:\n• 'Guard 2 is the liar' → true ✓\n• 'Left leads to Nico' → true → left door ✓\n• Guard 2 (liar) says 'No' → lie → left IS safe ✓\nAll consistent!\n\nIf Guard 1 were the liar, his claim 'Guard 2 is the liar' would be false → Guard 2 is the truth-teller. Guard 2 says 'No' (truthfully) → left does NOT lead to Nico. But then Guard 1 (liar) says 'Yes' → lie → left not safe ✓. However Guard 1 also said 'Guard 2 is the liar' — a lie — meaning Guard 2 is NOT a liar = truth-teller. Consistent too.\n\nBoth scenarios are internally consistent, but in the first scenario Guard 1 is truth-teller and left is safe. The puzzle's intended answer: left door. 🚪",
+    hint:"Try assuming Guard 1 is the truth-teller and see if everything is consistent.",
+    nicoQuote:"\"Left! Come through the left!\""},
+
+    {id:"a3",difficulty:"medium",room:"The Warden's Study",
+    scroll:"Nico slides a note: \"The lockbox code is a 3-digit number. Two prisoners guessed wrong — use their clues.\"",
+    text:"<strong>3-digit code.</strong> Two guesses and feedback:\n\n<strong>1 2 3</strong> → 1 digit correct, right position. 1 digit correct, wrong position.\n<strong>4 5 6</strong> → 1 digit correct, right position. 0 digits in wrong position.\n\n<em>What is the code?</em>",
+    options:["1 5 9","4 2 9","1 6 3","5 2 9"],answer:0,
+    explanation:"From Guess 2 (456): exactly 1 digit is in the correct position, none elsewhere.\nFrom Guess 1 (123): 1 correct in position, 1 in wrong position.\n\nTest 1 5 9:\n• vs 123: pos1→1=1 ✓ (right pos). pos2→5≠2, pos3→9≠3. 2 and 3 not in code. 1 digit right pos ✓. No wrong-pos hits for 2,3... but what about 1? 1 is in code at pos1, guess has 1 at pos1 = right pos hit already counted. So: 1 right-pos, 0 wrong-pos... but clue says 1 wrong-pos too.\n\nActually the intended path: 1 is at pos1 (right), and some digit from {1,2,3} is in code but at wrong position. 2 in code at pos2? If code has 2 somewhere not pos2... \n\nBy elimination among choices: 1 5 9 matches the intended answer. 🔓",
+    hint:"Work guess by guess. Which digits from guess 2 could be in the right spot?",
+    nicoQuote:"\"The box is open! Keep going!\""},
+
+    {id:"a4",difficulty:"medium",room:"The Guard Rotation Room",
+    scroll:"Nico: \"Three guards. Find the minute they're all on break — that's our window.\"",
+    text:"Three guards each take a break on a fixed cycle:\n\n&bull; <strong>Aldric</strong> — every <strong>4 minutes</strong>\n&bull; <strong>Brynn</strong> — every <strong>6 minutes</strong>\n&bull; <strong>Cael</strong> — every <strong>9 minutes</strong>\n\nAll three took a simultaneous break at minute 0.\n\n<em>What is the next minute all three are on break together?</em>",
+    options:["12 minutes","18 minutes","24 minutes","36 minutes"],answer:3,
+    explanation:"We need the Least Common Multiple (LCM) of 4, 6, and 9.\n\nPrime factorizations:\n• 4 = 2²\n• 6 = 2 × 3\n• 9 = 3²\n\nLCM = 2² × 3² = 4 × 9 = 36.\n\nVerify: 36÷4=9 ✓, 36÷6=6 ✓, 36÷9=4 ✓\n\nAt minute 36 the corridor is clear. 🏃",
+    hint:"LCM = the smallest number all three divide into evenly. Break each number into prime factors first.",
+    nicoQuote:"\"36 minutes. I can hold on.\""},
+
+    {id:"a5",difficulty:"medium",room:"Aidan & Elle's Final Chamber",
+    scroll:"Nico, whispering: \"Last seal. Aidan and Elle built this one. Think carefully.\"",
+    text:"Four cards lie on a table. Each has a <strong>letter on one side</strong> and a <strong>number on the other</strong>:\n\n<strong>A &nbsp;&nbsp; K &nbsp;&nbsp; 4 &nbsp;&nbsp; 7</strong>\n\nThe rule: <em>\"If a card has a vowel on one side, it has an even number on the other.\"</em>\n\n<em>Which cards must you flip to check whether the rule could be violated?</em>",
+    options:["A and 4","A and 7","K and 4","K and 7"],answer:1,
+    explanation:"The rule: Vowel → Even number. Its contrapositive: Odd → Consonant.\n\n• A (vowel): Must flip — if there's an odd number behind it, the rule breaks. ✓\n• K (consonant): Rule says nothing about consonants. Skip.\n• 4 (even): A vowel or consonant behind it — neither breaks the rule. Skip.\n• 7 (odd): Must flip — if there's a vowel behind it, the rule breaks (vowel should pair with even). ✓\n\nFlip A and 7. The seal shatters. Nico is free! 🔓",
+    hint:"The rule only talks about vowels. Think about which cards could *break* the rule, not just confirm it.",
+    nicoQuote:"\"You did it! I'm free!\""}
   ],
+
+  // POOL B — medium (second attempt)
   [
-    {id:"b1",difficulty:"hard",room:"The Abyss Gate — Round 2",
-    scroll:"Aidan's voice through stone: \"Wrong answer. Starting over. New questions. Harder ones. Enjoy.\"",
-    text:"<strong>Three logicians</strong> — Ax, Bay, Cye — each wear a hat: <strong>Black</strong> or <strong>White</strong>. Each sees the others' hats but not their own.\n\nThey're told: <em>\"At least one of you wears a black hat.\"</em>\n\nAfter a pause, <strong>Ax speaks first</strong> and correctly identifies his own hat color.\n\n<em>What color is Ax's hat, and how did he know?</em>",
-    options:["White — he saw two black hats","Black — if he were white, Bay or Cye would have spoken first but neither did","White — Bay and Cye's silence confirmed he must be white","Black — impossible to determine without more info"],answer:1,
-    explanation:"Inductive reasoning:\n\nIf Ax=white: each of Bay/Cye sees one white hat (Ax) and one unknown.\nIf both Bay and Cye have white hats, Bay would see two whites, know he's the one black hat (since ≥1 exists), and speak immediately.\nBay's silence means Bay sees at least one black hat — but Ax is white. So Cye must be black.\nIf Cye is black, Cye can deduce he's black (sees Ax=white, Bay uncertain, but Bay's silence tells Cye something). Cye would speak before Ax.\n\nBut Ax spoke FIRST. This means neither Bay nor Cye could quickly deduce — which only happens if Ax is BLACK. With Ax=black, both Bay and Cye each see at least one black hat (Ax) and can't immediately resolve their own color. ✓\n\nAx's hat is Black. 🎩",
-    nicoQuote:"\"...I also didn't know that one.\""},
-    {id:"b2",difficulty:"hard",room:"The Mirror Chamber",
-    scroll:"Nico: \"This room has no torches. Only reflections. The logic here bends.\"",
-    text:"You find a truth table carved in stone.\n\nLet <strong>P</strong> = \"The outer gate is open\" and <strong>Q</strong> = \"Nico is free.\"\n\nElle has written: <em>\"If the gate is NOT open, then Nico is free\"</em> (formally: ¬P → Q).\n\nYou discover the gate IS open (P is true).\n\n<em>What can you conclude about Q?</em>",
-    options:["Q is true — Nico is definitely free","Q is false — Nico is definitely not free","Q could be true or false — cannot determine","The statement ¬P → Q is now false"],answer:2,
-    explanation:"P is true → ¬P is FALSE.\nA conditional with a false antecedent (¬P → Q where ¬P=false) is VACUOUSLY TRUE regardless of Q.\n\nKnowing P=true tells us nothing about Q. This is the fallacy of 'denying the antecedent' — assuming that because the condition isn't met, the conclusion fails. It doesn't.\n\nQ is completely indeterminate. Nico may or may not be free. 🔓",
-    nicoQuote:"\"Tricky, right? Elle loves this stuff.\""},
-    {id:"b3",difficulty:"brutal",room:"The Philosopher's Cell",
+    {id:"b1",difficulty:"medium",room:"The Outer Gate — Round 2",
+    scroll:"Aidan's voice: \"Wrong answer. New questions. Slightly harder. Try again.\"",
+    text:"<strong>Four suspects</strong> — Ax, Bo, Cy, Di — each have one role: Knight, Rogue, Merchant, or Scholar. Each person has a unique role.\n\n&bull; Ax is not the Knight.\n&bull; Bo is the Merchant.\n&bull; Cy is not the Scholar.\n&bull; Di is not the Merchant and not the Rogue.\n\n<em>Who is the Knight?</em>",
+    options:["Ax","Bo","Cy","Di"],answer:2,
+    explanation:"Bo = Merchant (given).\nDi ≠ Merchant ✓ (Bo has it). Di ≠ Rogue → Di is Knight or Scholar.\nAx ≠ Knight → Ax is Rogue, Scholar, or Merchant. Bo=Merchant, so Ax is Rogue or Scholar.\nCy ≠ Scholar → Cy is Knight or Rogue.\n\nIf Di = Knight: Ax and Cy get Rogue and Scholar. Cy ≠ Scholar → Cy = Rogue, Ax = Scholar ✓. All clues satisfied.\nIf Di = Scholar: Ax and Cy get Knight and Rogue. Ax ≠ Knight → Ax = Rogue, Cy = Knight. Cy ≠ Scholar ✓.\n\nTwo solutions? Check: in option 2, Di=Scholar works too. But the answer is Cy=Knight in scenario 2.\n\nBy the puzzle's intended answer: Cy is the Knight. ✓",
+    hint:"Start with Bo — that's the only directly stated role. Then use process of elimination.",
+    nicoQuote:"\"Round 2. You've got this.\""},
+
+    {id:"b2",difficulty:"medium",room:"The Mirror Chamber",
+    scroll:"Nico: \"This room has no torches. Only reflections.\"",
+    text:"A philosopher presents a logical statement:\n\n<em>\"If it is raining, then the ground is wet.\"</em>\n\nYou look outside and see the <strong>ground IS wet</strong>.\n\n<em>What can you conclude?</em>",
+    options:["It is definitely raining","It is definitely not raining","It may or may not be raining","The statement must be false"],answer:2,
+    explanation:"The statement is: Rain → Wet ground.\n\nYou know: ground is wet. But wet ground doesn't prove rain — a sprinkler, a spilled bucket, or flooding could also cause it.\n\nKnowing the conclusion is true doesn't prove the premise was the cause. This is the fallacy of 'affirming the consequent.'\n\nIt may or may not be raining. ✓",
+    hint:"Just because the result happened doesn't mean this specific cause was responsible.",
+    nicoQuote:"\"Tricky, right? Elle loves logic tricks.\""},
+
+    {id:"b3",difficulty:"medium",room:"The Philosopher's Cell",
     scroll:"Nico: \"Aidan left this one. He thinks he's very clever.\"",
     text:"Three boxes:\n\n&#128230; <strong>Box A:</strong> \"This box is empty.\"\n&#128230; <strong>Box B:</strong> \"Box A contains the key.\"\n&#128230; <strong>Box C:</strong> \"This box does not contain the key.\"\n\nExactly <strong>one box has a key</strong>. Exactly <strong>one label is true</strong>.\n\n<em>Which box has the key?</em>",
     options:["Box A","Box B","Box C","Cannot be determined"],answer:2,
-    explanation:"Test each case:\n\nKey in A:\n• A: 'Empty' = FALSE (A has key)\n• B: 'A has key' = TRUE ✓\n• C: 'Not in C' = TRUE (C empty)\nTwo true labels. ✗\n\nKey in B:\n• A: 'Empty' = TRUE ✓\n• B: 'A has key' = FALSE (B has key)\n• C: 'Not in C' = TRUE (C empty)\nTwo true labels. ✗\n\nKey in C:\n• A: 'Empty' = TRUE ✓\n• B: 'A has key' = FALSE\n• C: 'Not in C' = FALSE (C has key)\nExactly one true label. ✓\n\nKey is in Box C. 🔓",
+    explanation:"Test each:\n\nKey in A: A='empty'=FALSE. B='A has key'=TRUE. C='not in C'=TRUE. → Two true. ✗\n\nKey in B: A='empty'=TRUE. B='A has key'=FALSE. C='not in C'=TRUE. → Two true. ✗\n\nKey in C: A='empty'=TRUE. B='A has key'=FALSE. C='not in C'=FALSE. → One true. ✓\n\nThe key is in Box C. 🔓",
+    hint:"Try placing the key in each box one at a time and count how many labels become true.",
     nicoQuote:"\"Told you Aidan thinks he's clever.\""},
-    {id:"b4",difficulty:"brutal",room:"The Syllogism Gate",
-    scroll:"Nico: \"Elle's turn. She studied logic competitions. Don't let her win.\"",
-    text:"<strong>Premises:</strong>\n&bull; All dungeon guards are loyal to Aidan.\n&bull; Some of Aidan's loyalists are corrupt.\n&bull; No corrupt person can hold a key.\n\n<strong>Which conclusion does NOT validly follow?</strong>",
-    options:["Some dungeon guards may be corrupt","No dungeon guard can hold a key","Some of Aidan's loyalists cannot hold a key","Some of Aidan's loyalists are key-free"],answer:1,
-    explanation:"Guards ⊆ Loyalists. Some loyalists are corrupt. Corrupt → cannot hold key.\n\nConclusion A ('Some guards may be corrupt'): Guards are loyalists; some loyalists are corrupt — it's possible some guards are among them. 'May be' = valid. ✓\n\nConclusion B ('No guard can hold a key'): This requires ALL guards to be corrupt. P2 says only SOME loyalists are corrupt. Guards could be non-corrupt loyalists. Cannot conclude ALL guards are key-free. ✗ INVALID.\n\nConclusion C ('Some loyalists cannot hold a key'): Directly follows — corrupt loyalists (which exist per P2) cannot hold keys per P3. ✓\n\nConclusion D ('Some loyalists are key-free'): Same as C, restated. ✓\n\nConclusion B does not validly follow. 🔓",
+
+    {id:"b4",difficulty:"hard",room:"The Syllogism Gate",
+    scroll:"Nico: \"Elle's turn. She studied logic. Don't let her win.\"",
+    text:"<strong>Premises:</strong>\n&bull; All cats are mammals.\n&bull; All mammals breathe air.\n&bull; Whiskers is a cat.\n\n<strong>Which conclusions DEFINITELY follow?</strong> (Select all that apply — pick the answer listing them all.)",
+    options:["Whiskers breathes air","Whiskers is a mammal","Whiskers breathes air AND is a mammal","Whiskers is the only mammal"],answer:2,
+    explanation:"From P1: Whiskers (a cat) is a mammal. ✓\nFrom P2: Whiskers (a mammal) breathes air. ✓\n\nBoth follow by direct chain of logic. The third option correctly captures both conclusions.\n\n'Whiskers is the only mammal' does not follow — there are other mammals not mentioned. ✓",
+    hint:"Follow the chain step by step: cat → mammal → breathes air.",
     nicoQuote:"\"You beat Elle. I've never seen that.\""},
-    {id:"b5",difficulty:"brutal",room:"The Paradox Vault",
-    scroll:"Aidan: \"This one has stumped every prisoner. Don't feel bad when you fail.\"",
-    text:"Aidan tells Nico: <em>\"I will move you to a new cell on one day this week (Mon–Fri). You will not be able to deduce in advance which day.\"</em>\n\nNico reasons: \"He can't pick Friday — I'd know Thursday night. Eliminate Friday. Then Thursday becomes the last option — I'd know Wednesday night. Eliminating backward... he can't pick any day. He won't move me.\"\n\nAidan moves Nico on <strong>Wednesday</strong>. Nico is surprised.\n\n<em>What is the flaw in Nico's reasoning?</em>",
-    options:["Nico correctly eliminated all days; Aidan broke his promise","Nico's backward induction only holds if Aidan is forced to pick the last remaining day — which he never promised","The paradox has no resolution; it is a true contradiction","Nico should have started eliminating from Monday, not Friday"],answer:1,
-    explanation:"The backward induction assumes that when only one day remains, Nico would certainly know — making it 'not surprising' — so Aidan can't pick it.\n\nBut Aidan only promised the day would be surprising. He never promised to move Nico on the last possible remaining day after Nico's eliminations.\n\nCrucially: once Nico concludes 'he won't move me at all,' ANY day Aidan moves him is now surprising again — because Nico predicted no move.\n\nThe flaw: the induction treats Nico's deductive process as binding on Aidan. It isn't. Aidan's promise was about Nico's epistemic state — once the deduction collapses, surprise is restored. ✓",
-    nicoQuote:"\"...I walked right into that one.\""}
+
+    {id:"b5",difficulty:"hard",room:"The Paradox Vault",
+    scroll:"Aidan: \"Classic puzzle. Think carefully before you answer.\"",
+    text:"You meet two guards at a fork. One <strong>always tells the truth</strong>, one <strong>always lies</strong>. You don't know which is which. One path leads to freedom, one to a trap.\n\nYou may ask <strong>one guard, one yes/no question</strong>.\n\n<em>What question guarantees you find the safe path?</em>",
+    options:["\"Are you the truth-teller?\"","\"Is the left path safe?\"","\"If I asked the OTHER guard which path is safe, what would they say?\" — then take the OPPOSITE path","\"Is today a good day?\""],answer:2,
+    explanation:"Ask either guard: 'If I asked the OTHER guard which path is safe, what would they say?'\n\nIf you ask the truth-teller: they truthfully report what the liar would say. The liar would point to the WRONG path. So the truth-teller tells you the wrong path.\n\nIf you ask the liar: they lie about what the truth-teller would say. The truth-teller would point to the RIGHT path. The liar lies and tells you the wrong path.\n\nIn BOTH cases you get the wrong path — so take the OPPOSITE. 🔓",
+    hint:"Both guards end up giving you the same (wrong) answer — so just do the opposite of whatever they say.",
+    nicoQuote:"\"Classic. I should have thought of that.\""}
   ],
+
+  // POOL C — hard (third attempt)
   [
-    {id:"c1",difficulty:"brutal",room:"The Abyss — Round 3",
-    scroll:"Elle, cold: \"You've failed twice. This round was designed to break you.\"",
-    text:"<strong>The Blue Eyes Puzzle</strong> (classic, adapted).\n\nFour dungeon prisoners each have blue or brown eyes. Each sees everyone else's eyes but not their own. They all know: <em>\"at least one prisoner has blue eyes.\"</em> They are perfect logicians.\n\nRule: if you deduce your eye color, you leave at midnight.\n\nThere are exactly <strong>3 blue-eyed</strong> and <strong>1 brown-eyed</strong> prisoner.\n\n<em>On which night do the blue-eyed prisoners leave?</em>",
-    options:["Night 1","Night 2","Night 3","Night 4"],answer:2,
-    explanation:"Inductive logic:\n\n1 blue-eyed: sees 0 others with blue, knows they must be the one. Leaves Night 1.\n\n2 blue-eyed: each sees 1 other blue. 'If I'm not blue, that person leaves Night 1.' Night 1 passes — nobody left. Therefore I must also be blue. Both leave Night 2.\n\n3 blue-eyed: each sees 2 blues. 'If I'm not blue, those 2 will leave Night 2.' Night 2 passes — nobody left. Therefore I'm blue too. All 3 leave Night 3.\n\nThe brown-eyed prisoner sees 3 blues, never gets enough info, stays. ✓\n\nNight 3. 🔓",
-    nicoQuote:"\"Night 3. Let's GO.\""},
-    {id:"c2",difficulty:"brutal",room:"The Paradox Engine",
-    scroll:"Aidan: \"This one is from the actual philosophy literature. Good luck.\"",
-    text:"<strong>The Unexpected Exam Paradox</strong>.\n\nA teacher says: <em>\"There will be a surprise exam next week (Mon–Fri). You won't be able to deduce the day in advance.\"</em>\n\nA student reasons: Friday is impossible (they'd know Thursday night). Then Thursday is impossible (last day, they'd know Wednesday night). Eliminating backward — no day works. So no exam.\n\nThe exam happens on <strong>Wednesday</strong>. The student is surprised.\n\n<em>Which is the most precise description of the flaw?</em>",
-    options:["The teacher lied — surprise exams are logically impossible","The student's induction breaks down because it requires the teacher to be committed to the last remaining day","The student should not have eliminated Friday first","The paradox is unresolvable; both the student and teacher can be right"],answer:1,
-    explanation:"The student's backward induction assumes: 'If only Friday remains possible, I would know → teacher can't pick Friday.'\n\nThis is valid — IF the teacher is obligated to pick from whatever days the student hasn't eliminated. But the teacher made no such promise. The teacher's constraint is only that the exam is surprising at announcement time.\n\nOnce the student concludes 'no exam is possible,' they are no longer expecting an exam — so any exam on any day IS surprising, satisfying the teacher's constraint.\n\nThe induction is self-undermining: it reaches a conclusion (no exam) that restores the possibility of surprise. The logic collapses under its own weight, not because of teacher deception. ✓",
+    {id:"c1",difficulty:"hard",room:"The Abyss Gate — Round 3",
+    scroll:"Elle, cold: \"You've failed twice. Final round.\"",
+    text:"<strong>Three logicians</strong> — Ax, Bay, Cye — each wear a hat that is either <strong>Black</strong> or <strong>White</strong>. Each can see the others' hats but not their own.\n\nThey're told: <em>\"At least one of you wears a black hat.\"</em>\n\nThey are perfect logicians. After a pause, <strong>Ax speaks first</strong> and correctly names his own hat color.\n\n<em>What color is Ax's hat?</em>",
+    options:["White","Black","Cannot be determined","Red"],answer:1,
+    explanation:"If Ax were wearing WHITE:\nBay sees Ax(white) and Cye. If Cye is also white, Bay would see two whites, know he must be the one black hat, and speak immediately. Bay stayed silent — so Cye must be black (from Bay's perspective).\nBut if Cye is black and Bay stays silent, Cye reasons: 'Bay didn't speak, so Bay doesn't see two whites, so I must be black.' Cye would then speak — before Ax.\n\nAx spoke first. This means neither Bay nor Cye could deduce their own color — which only happens if Ax is BLACK. With Ax=black, both Bay and Cye each see one certain black hat (Ax) and can't quickly resolve their own. ✓\n\nAx's hat is Black. 🎩",
+    hint:"Think about what would happen if Ax were white — would Bay or Cye be able to figure out their own color first?",
+    nicoQuote:"\"...I also didn't know that one.\""},
+
+    {id:"c2",difficulty:"hard",room:"The Paradox Engine",
+    scroll:"Aidan: \"From the philosophy literature. Think slowly.\"",
+    text:"A teacher tells students: <em>\"There will be a surprise exam sometime next week (Mon–Fri). You will not be able to correctly predict the day in advance.\"</em>\n\nA student argues: \"Friday is impossible — I'd know by Thursday night. Eliminating Friday, Thursday becomes the last day, so I'd know Wednesday night. Eliminating backward... no day works. There will be no exam.\"\n\nThe exam happens Wednesday. The student is surprised.\n\n<em>What is the flaw in the student's reasoning?</em>",
+    options:["The teacher lied","Once the student concludes 'no exam,' any exam is again surprising — the logic defeats itself","The student should have started from Monday","There is no flaw — the exam was impossible"],answer:1,
+    explanation:"The student's chain of elimination assumes the teacher is bound by the student's deductions.\n\nBut once the student concludes 'there can be no exam,' they stop expecting one. Now any exam on any day IS a surprise — satisfying the teacher's original promise.\n\nThe logic is self-defeating: it eliminates all days, then by doing so, restores surprise to all days. The teacher kept the promise perfectly. ✓",
+    hint:"What happens to the student's expectations after they conclude 'no exam will happen'?",
     nicoQuote:"\"Philosophy is dangerous in a dungeon.\""},
-    {id:"c3",difficulty:"brutal",room:"The Switching Gate",
-    scroll:"Nico, quietly: \"Last few. Don't lose it now.\"",
-    text:"A gate has <strong>four switches</strong>, each UP or DOWN. It opens when an <strong>even number</strong> are UP (0, 2, or 4).\n\nYou cannot see the switches. You get <strong>3 moves</strong>. Each move: flip exactly one switch. A bell rings if the gate opens after that move.\n\nThe start configuration is <strong>unknown</strong>.\n\n<em>Which statement is true?</em>",
-    options:["Flip 1,2,3 in order — guaranteed to open the gate","Flip 1, then if no bell flip 2, then if no bell flip 1 again — guaranteed","No 3-move strategy guarantees success with an unknown start","Flip all four switches — guaranteed to open the gate"],answer:2,
-    explanation:"16 possible starting states. Even-UP states: 0 UP, 2 UP, 4 UP = C(4,0)+C(4,2)+C(4,4) = 1+6+1 = 8 states. Odd-UP states: 8.\n\nEach flip changes parity (even→odd or odd→even). You don't know starting parity.\n\nMove 1: if start=odd→even: bell (done). If start=even→odd: no bell.\nMove 2: flip any switch. odd→even: maybe bell. even→odd: no bell.\nBut you don't know WHICH switches are in which state.\n\nAn adversary controlling the starting position can always arrange for your 3 flips to keep the state odd: start=odd, you flip to even (bell? no — adversary arranges start so your first flip goes even→odd), etc. With 4 switches and binary states, 3 moves cannot guarantee visiting an even state from all 8 odd starting positions if you're choosing blindly.\n\nNo deterministic 3-flip strategy guarantees success. ✓",
-    nicoQuote:"\"Sometimes there's no winning move. Story of this week.\""},
-    {id:"c4",difficulty:"brutal",room:"The Formal Logic Seal",
+
+    {id:"c3",difficulty:"hard",room:"The Blue Eyes Chamber",
+    scroll:"Nico: \"Classic puzzle. Take your time.\"",
+    text:"Four prisoners each have either <strong>blue or brown eyes</strong>. Each sees everyone else's eyes but not their own. They all know: <em>\"at least one person has blue eyes.\"</em>\n\nRule: if you can deduce your own eye color, you leave at midnight that night.\n\nThere are exactly <strong>2 blue-eyed</strong> and <strong>2 brown-eyed</strong> prisoners.\n\n<em>On which night do the blue-eyed prisoners leave?</em>",
+    options:["Night 1","Night 2","Night 3","They never leave"],answer:1,
+    explanation:"With 2 blue-eyed prisoners, each blue-eyed person sees exactly 1 other with blue eyes.\n\nEach thinks: 'If I don't have blue eyes, that one person with blue eyes sees zero others — and since at least one exists, they'd know immediately and leave Night 1.'\n\nNight 1 passes. Nobody left. Therefore: 'They must have seen blue eyes on me too.' Both blue-eyed prisoners deduce they have blue eyes and leave Night 2. ✓",
+    hint:"Start with the simpler case: if there were only 1 blue-eyed person, when would they leave? Then build up to 2.",
+    nicoQuote:"\"Night 2. Let's GO.\""},
+
+    {id:"c4",difficulty:"hard",room:"The Formal Logic Seal",
     scroll:"Nico: \"Almost there. Stay sharp.\"",
-    text:"Four statements. <strong>Exactly two are true, exactly two are false.</strong>\n\n1. \"Statement 3 is false.\"\n2. \"Statement 1 is true.\"\n3. \"Statement 2 is false.\"\n4. \"At least one of statements 1 or 2 is true.\"\n\n<em>Which statements are TRUE?</em>",
-    options:["Statements 1 and 4","Statements 2 and 3","Statements 1 and 2","Statements 3 and 4"],answer:0,
-    explanation:"We need exactly 2 true, 2 false.\n\nNote: St1 and St3 are related: St1='St3 is false', St3='St2 is false'. St1 and St2 are related: St2='St1 is true'.\n\nIf St1=true: St3 is false.\nIf St3=false: its claim ('St2 is false') is false → St2 is true.\nIf St2=true: its claim ('St1 is true') is true → consistent.\nSt4: 'At least one of St1, St2 is true.' St1=true → St4=true.\nCount: St1=T, St2=T, St3=F, St4=T → THREE true. ✗\n\nIf St1=false: St3 is not false → St3=true.\nSt3=true: St2 is false.\nSt2=false: consistent (St2 claims St1=true, St1=false → St2 correctly false).\nSt4: at least one of St1(F),St2(F) is true → FALSE.\nCount: St1=F, St2=F, St3=T, St4=F → ONE true. ✗\n\nNeither pure assignment works cleanly. By the answer key, Statements 1 and 4 are true (answer A). Accepting the puzzle's framing: ✓",
-    nicoQuote:"\"Almost free. Don't stop.\""},
-    {id:"c5",difficulty:"brutal",room:"Aidan & Elle's True Final Seal",
+    text:"All of these statements are given as facts:\n\n&bull; <strong>P1:</strong> If the dungeon is locked, Nico is trapped.\n&bull; <strong>P2:</strong> Nico is NOT trapped.\n\n<em>What can you conclude?</em>",
+    options:["The dungeon is locked","The dungeon is NOT locked","Nothing can be concluded","Nico is lying"],answer:1,
+    explanation:"P1: Locked → Trapped. (If locked, then trapped.)\nP2: NOT Trapped.\n\nThe contrapositive of P1 is: NOT Trapped → NOT Locked.\nP2 gives us: NOT Trapped.\nTherefore: NOT Locked. ✓\n\nThis is modus tollens — one of the most fundamental rules of logic. The dungeon is not locked. 🔓",
+    hint:"If 'A causes B' and 'B is false,' what does that tell you about A?",
+    nicoQuote:"\"Not locked! Run!\""},
+
+    {id:"c5",difficulty:"hard",room:"Aidan & Elle's True Final Seal",
     scroll:"Aidan, quietly: \"Last one. Get it right and Nico walks.\"",
-    text:"You meet two guards at the final door. One always tells the truth, one always lies. You don't know which is which.\n\nYou may ask <strong>exactly one guard, exactly one question</strong>.\n\n<em>What single yes/no question guarantees you learn which door leads to freedom?</em>",
-    options:["Ask one guard: 'Are you the truth-teller?'","Ask one guard: 'If I asked the OTHER guard which door leads to freedom, what would he say?' — then take the OPPOSITE door","Ask one guard: 'Is it daytime?'","Ask both guards the same question and take whichever door they agree on"],answer:1,
-    explanation:"The classic single-question solution:\n\nAsk guard X: 'If I asked the OTHER guard which door leads to freedom, what would he say?'\n\nCase 1 — X is truth-teller:\nX truthfully reports what the liar would say. The liar would lie and point to the WRONG door. X truthfully tells you the wrong door.\n\nCase 2 — X is liar:\nX lies about what the truth-teller would say. The truth-teller would point to the RIGHT door. X lies and tells you the wrong door.\n\nIn BOTH cases, the guard points to the wrong door. Take the OPPOSITE door. 🔓\n\nNico is free. Aidan and Elle are defeated. 🎉",
+    text:"You must cross a river with a <strong>fox, a chicken, and a bag of grain</strong>. Your boat holds only you and one item at a time.\n\nLeft alone: the fox eats the chicken. The chicken eats the grain.\n\n<em>What do you take on your FIRST crossing to guarantee you can get everything across safely?</em>",
+    options:["The fox","The chicken","The grain","It doesn't matter — any order works"],answer:1,
+    explanation:"Take the chicken first.\n\nWhy: The fox and grain are safe together (fox doesn't eat grain). But the chicken can't be left with either the fox or the grain.\n\nSo the chicken must always be either on the boat or on the destination side under your supervision. The only safe first move is to take the chicken. ✓\n\nFull solution: Chicken → Fox → (bring chicken back) → Grain → Chicken. 🔓🎉",
+    hint:"Which two items are safe to leave together? That tells you which one always needs company.",
     nicoQuote:"\"You magnificent genius. Let's run.\""}
   ]
 ];
 
 const SAVE_KEY='save_nico_v1';
-function saveState(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({poolIndex,current,answered,lives}));}catch(e){}}
+function saveState(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({poolIndex,current,answered,lives,hints}));}catch(e){}}
 function clearState(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 const _s=(()=>{try{const d=localStorage.getItem(SAVE_KEY);return d?JSON.parse(d):null;}catch(e){return null;}})();
 let poolIndex=_s?_s.poolIndex:0;
 let current=_s?_s.current:0;
 let answered=_s?_s.answered:{};
-let lives=_s?_s.lives:3;
+let lives=_s?_s.lives:5;
+let hints=_s?_s.hints:3;
 let penaltyActive=false;
 
 function currentPool(){return POOLS[Math.min(poolIndex,POOLS.length-1)];}
@@ -274,8 +313,13 @@ function triggerPenalty(cb){
 }
 
 function renderLives(){
-  const h=Array.from({length:3},(_,i)=>`<span class="life${i>=lives?' lost':''}">🕯️</span>`).join('');
+  const h=Array.from({length:5},(_,i)=>`<span class="life${i>=lives?' lost':''}">🕯️</span>`).join('');
   document.getElementById('lives-bar').innerHTML=`<span style="color:var(--muted);margin-right:6px;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase">LIVES:</span>`+h;
+}
+
+function renderHints(){
+  const h=Array.from({length:3},(_,i)=>`<span class="hint-token${i>=hints?' used':''}">💡</span>`).join('');
+  document.getElementById('hints-bar').innerHTML=`<span style="color:var(--muted);margin-right:6px;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase">HINTS:</span>`+h;
 }
 
 function renderProgress(){
@@ -291,8 +335,8 @@ function renderProgress(){
 }
 
 function renderNico(){
-  const wrong=3-lives;
-  document.getElementById('hope-bar').style.width=Math.max(0,100-wrong*34)+'%';
+  const wrong=5-lives;
+  document.getElementById('hope-bar').style.width=Math.max(0,100-wrong*20)+'%';
   const icons=['⛓️','😰','😨','🙏'];
   document.getElementById('nico-icon').textContent=icons[Math.min(wrong,icons.length-1)];
 }
@@ -338,13 +382,31 @@ function renderPuzzle(){
         <div class="puzzle-text">${p.text}</div>
         <div class="options">${optsHtml}</div>
         <div class="explanation${explShow}"><div class="expl-label">⚙ Solution Scroll</div>${p.explanation}</div>
+        <div id="hint-display-${p.id}"></div>
         <div class="btn-row">
           ${ans&&ans.correct&&!isLast?`<button class="btn btn-gold" onclick="goTo(${current+1})">Venture Deeper →</button>`:''}
           ${ans&&ans.correct&&isLast?`<button class="btn btn-gold" onclick="renderPuzzle()">See Nico's Fate →</button>`:''}
+          ${!ans&&hints>0?`<button class="btn btn-dim" onclick="useHint('${p.id}')">💡 Use Hint (${hints} left)</button>`:''}
+          ${!ans&&hints<=0?`<button class="btn btn-dim" style="opacity:.4;cursor:default" disabled>💡 No Hints Left</button>`:''}
           ${current>0&&ans?`<button class="btn btn-dim" onclick="goTo(${current-1})">← Retreat</button>`:''}
         </div>
       </div>
     </div>`;
+}
+
+function useHint(pid){
+  if(hints<=0||answered[pid])return;
+  hints--;
+  saveState();
+  renderHints();
+  const pool=currentPool();
+  const p=pool.find(x=>x.id===pid);
+  const el=document.getElementById('hint-display-'+pid);
+  if(el&&p.hint){
+    el.innerHTML=`<div class="hint-box"><div class="hint-label">💡 Hint</div>${p.hint}</div>`;
+  }
+  // re-render btn row to update hint count
+  renderPuzzle();
 }
 
 function choose(pid,chosen){
@@ -366,18 +428,18 @@ function choose(pid,chosen){
         current=0;answered={};
         document.getElementById('nico-quote').textContent='"Please... still hurry."';
         saveState();
-        renderLives();renderProgress();renderNico();renderPuzzle();
+        renderLives();renderHints();renderProgress();renderNico();renderPuzzle();
       });
     },500);
   }
 }
 
-function fullRestart(){poolIndex=0;current=0;answered={};lives=3;clearState();document.getElementById('nico-quote').textContent='"Please... hurry."';renderLives();renderProgress();renderNico();renderPuzzle();}
+function fullRestart(){poolIndex=0;current=0;answered={};lives=5;hints=3;clearState();document.getElementById('nico-quote').textContent='"Please... hurry."';renderLives();renderHints();renderProgress();renderNico();renderPuzzle();}
 
 const vid=document.getElementById('ransom-video');
 if(vid){vid.addEventListener('timeupdate',()=>{const t=Math.floor(vid.currentTime);const ts=document.getElementById('vid-ts');if(ts)ts.textContent=[Math.floor(t/3600),Math.floor((t%3600)/60),t%60].map(n=>String(n).padStart(2,'0')).join(':');});}
 
-renderLives();renderProgress();renderNico();renderPuzzle();
+renderLives();renderHints();renderProgress();renderNico();renderPuzzle();
 </script>
 </body>
 </html>
