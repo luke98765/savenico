@@ -258,7 +258,15 @@ const POOLS = [
   ]
 ];
 
-let poolIndex=0, current=0, answered={}, lives=3, penaltyActive=false;
+const SAVE_KEY='save_nico_v1';
+function saveState(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({poolIndex,current,answered,lives}));}catch(e){}}
+function clearState(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
+const _s=(()=>{try{const d=localStorage.getItem(SAVE_KEY);return d?JSON.parse(d):null;}catch(e){return null;}})();
+let poolIndex=_s?_s.poolIndex:0;
+let current=_s?_s.current:0;
+let answered=_s?_s.answered:{};
+let lives=_s?_s.lives:3;
+let penaltyActive=false;
 
 function currentPool(){return POOLS[Math.min(poolIndex,POOLS.length-1)];}
 
@@ -272,6 +280,7 @@ function triggerPenalty(cb){
   if(penaltyActive)return;
   penaltyActive=true;
   lives=Math.max(0,lives-1);
+  saveState();
   const ov=document.getElementById('penalty-overlay');
   const mg=document.getElementById('penalty-msg');
   const ct=document.getElementById('penalty-count');
@@ -363,6 +372,7 @@ function choose(pid,chosen){
   if(correct){
     answered[pid]={correct:true,chosen};
     if(p.nicoQuote)document.getElementById('nico-quote').textContent=p.nicoQuote;
+    saveState();
     renderProgress();renderNico();renderPuzzle();
   } else {
     answered[pid]={correct:false,chosen};
@@ -372,13 +382,14 @@ function choose(pid,chosen){
         poolIndex=Math.min(poolIndex+1,POOLS.length-1);
         current=0;answered={};
         document.getElementById('nico-quote').textContent='"Please... still hurry."';
+        saveState();
         renderLives();renderProgress();renderNico();renderPuzzle();
       });
     },500);
   }
 }
 
-function fullRestart(){poolIndex=0;current=0;answered={};lives=3;document.getElementById('nico-quote').textContent='"Please... hurry."';renderLives();renderProgress();renderNico();renderPuzzle();}
+function fullRestart(){poolIndex=0;current=0;answered={};lives=3;clearState();document.getElementById('nico-quote').textContent='"Please... hurry."';renderLives();renderProgress();renderNico();renderPuzzle();}
 
 const vid=document.getElementById('ransom-video');
 if(vid){vid.addEventListener('timeupdate',()=>{const t=Math.floor(vid.currentTime);const ts=document.getElementById('vid-ts');if(ts)ts.textContent=[Math.floor(t/3600),Math.floor((t%3600)/60),t%60].map(n=>String(n).padStart(2,'0')).join(':');});}
